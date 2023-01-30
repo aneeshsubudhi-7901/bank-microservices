@@ -1,7 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const amqp = require("amqplib");
 const app = express();
 const port = process.env.PORT || 4004;
+
+const client = require("twilio")(process.env.accountSid, process.env.authToken);
 
 var connection, channel;
 var exchange = "logs";
@@ -22,6 +25,14 @@ async function connectQueue() {
     channel.bindQueue(q.queue, exchange, "");
 
     channel.consume(q.queue, (data) => {
+      client.messages
+        .create({
+          messagingServiceSid: process.env.messagingServiceSid,
+          to: "+917666549867",
+        })
+        .then((message) => console.log(message.sid))
+        .done();
+
       console.log(`${Buffer.from(data.content)}`);
       channel.ack(data);
     });
